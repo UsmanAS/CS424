@@ -131,7 +131,7 @@ ui <- dashboardPage(
                ),
                
                box(title = "Noon Temps as Table", solidHeader = TRUE, status = "primary", width = 12,
-                   dataTableOutput("tab1", height = 200)
+                   dataTableOutput("tab1")
                )
                
              
@@ -215,11 +215,28 @@ server <- function(input, output) {
     # show box plot of the temperatures at noon for a given room for a given year
     output$hist3 <- renderPlot({
     
-      #Plot the Top 10 tags
-      ggplot(TagTableTop, aes(TagTable, TTTF)) +
-      geom_bar(fill = "black", stat = "identity") +
-      labs(x = "Tag", y = "Amount")
-    
+      if( input$username == "None") {
+        #Plot the Top 10 tags
+        ggplot(TagTableTop, aes(TagTable, TTTF)) +
+          geom_bar(fill = "black", stat = "identity") +
+          labs(x = "Tag", y = "Amount")
+      }
+      
+      else  {
+        
+        TagTableUser <- unlist(strsplit(litter$tags[litter$username == input$username], split = ","))
+        TagTableUser <- unlist(strsplit(TagTableUser, split = " "))
+        TagTableUser <- table(TagTableUser)
+        TagTableUser <- data.frame(TagTableUser)
+        TagTableUser$TagTable <- TagTableUser$TagTableUser
+        TagTableUser$TagTableUser <- NULL
+        TagTableUserTop <- merge(TagTableUser,TagTableTop, by="TagTable")
+        TTUF <- TagTableUserTop$Freq.x
+        ggplot(TagTableUserTop, aes(TagTableUserTop$TagTable, TTUF)) +
+          geom_bar(fill = "black", stat = "identity") +
+          labs(x = "Tag", y = "Amount")
+        
+      }
     })
     # use DT to help out with the tables - https://datatables.net/reference/option/
     output$tab1 <- DT::renderDataTable(
