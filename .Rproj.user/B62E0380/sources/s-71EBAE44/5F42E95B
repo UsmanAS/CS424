@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1581213371077.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1386110687",
+    "id" : "5F42E95B",
+    "lastKnownWriteTime" : 1581320917,
+    "last_content_update" : 1581320917248,
+    "path" : "~/Project1/P1 script.R",
+    "project_path" : "P1 script.R",
+    "properties" : {
+        "cursorPosition" : "144,1",
+        "scrollLine" : "115",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

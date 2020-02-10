@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1581319444644.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "8B3E1C4A",
+    "lastKnownWriteTime" : 8223622655844181364,
+    "last_content_update" : 1581319444644,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "15C25014",
+        "caption" : "CountTop",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=CountTop&cache_key=15C25014",
+        "displayedObservations" : 10,
+        "environment" : "",
+        "expression" : "CountTop",
+        "object" : "CountTop",
+        "preview" : 0,
+        "totalObservations" : 10,
+        "variables" : 2
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
