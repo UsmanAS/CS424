@@ -11,6 +11,7 @@ library(ggplot2)
 library(fingerprint)
 library(shiny)
 library(shinydashboard)
+library(DT)
 library(rsconnect)
 
 #Read in data
@@ -122,9 +123,11 @@ ui <- dashboardPage(
                      leafletOutput("leaf", height = 800)
                  )
                ),
+               h2("Total Pickup: ", totalPickup),
+            
+               
                  
                fluidRow(
-                 h2("Total Pickup: ", totalPickup),
                  
                  box(title = "Top 10 pickers", solidHeader = TRUE, status = "primary", width = 12,
                      dataTableOutput("tab0", height = 400)
@@ -473,4 +476,3 @@ server <- function(input, output) {
     
 #Launch Shiny
 shinyApp(ui = ui, server = server)
-
