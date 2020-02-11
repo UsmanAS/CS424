@@ -456,7 +456,7 @@ server <- function(input, output) {
         
         dataUser <- litter[litter$username == input$username,]
         TagName <- dataUser$tags
-        map <- leaflet( data = DataUser)
+        map <- leaflet( data = dataUser)
       }
       
       else  {
