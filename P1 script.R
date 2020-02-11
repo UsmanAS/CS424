@@ -3,6 +3,7 @@
 #Libraries to use
 
 library(lubridate)
+library(leaflet)
 library(stringr)
 library(plyr)
 library(dplyr)
@@ -86,6 +87,8 @@ TTTF <- TagTableTop$Freq
 
 users <- CountTop$username
 users <- append(users, "None")
+topTags <- as.character(TagTableTop$TagTable)
+topTags <- append(topTags, "None")
 
 # Create the shiny dashboard
 ui <- dashboardPage(
@@ -105,7 +108,7 @@ ui <- dashboardPage(
       menuItem("", tabName = "cheapBlankSpace", icon = NULL),
       menuItem("", tabName = "cheapBlankSpace", icon = NULL)),
     
-    #selectInput("stuff", "Select the year to visualize", years, selected = 2019),
+    selectInput("tag", "Select the tag to visualize", topTags, selected = "None"),
     selectInput("username", "Select the Data to visualize", users, selected = "None"),
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("About", tabName = "About")
@@ -114,7 +117,22 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
        tabItem(tabName = "dashboard",
-       fluidRow(
+               fluidRow(
+                 box(title = "Leaflet Map", solidHeader = TRUE, status = "primary", width = 12,
+                     leafletOutput("leaf", height = 800)
+                 )
+               ),
+                 
+               fluidRow(
+                 h2("Total Pickup: ", totalPickup),
+                 
+                 box(title = "Top 10 pickers", solidHeader = TRUE, status = "primary", width = 12,
+                     dataTableOutput("tab0", height = 400)
+                 )
+               ),
+               fluidRow(
+         
+         
                box(title = "Each Day Pick Up", solidHeader = TRUE, status = "primary", width = 12,
                    plotOutput("hist0", height = 400)
                ),
@@ -128,14 +146,32 @@ ui <- dashboardPage(
                ),
                box(title = "Each Tag Pick Up", solidHeader = TRUE, status = "primary", width = 12,
                    plotOutput("hist3", height = 400)
-               ),
-               
-               box(title = "Noon Temps as Table", solidHeader = TRUE, status = "primary", width = 12,
-                   dataTableOutput("tab1")
                )
-               
              
+        ),
+      fluidRow(
+        
+        box(title = "Litter picked up each Day", solidHeader = TRUE, status = "primary", width = 12,
+            dataTableOutput("tab1", height = 400)
+        ),
+        
+        box(title = "Litter picked up each Weekday", solidHeader = TRUE, status = "primary", width = 12,
+            dataTableOutput("tab2", height = 400)
+        ),
+        
+        box(title = "Litter picked up each Hour", solidHeader = TRUE, status = "primary", width = 12,
+            dataTableOutput("tab3", height = 400)
+        ),
+        
+        box(title = "Top 10 Tags", solidHeader = TRUE, status = "primary", width = 12,
+            dataTableOutput("tab4", height = 400)
         )
+        
+        
+        
+        
+        
+      )
       ),
       tabItem(tabName = "About",
             h2("About???")
@@ -153,15 +189,23 @@ server <- function(input, output) {
     output$hist0 <- renderPlot({
       
         #Make a plot of the litter by day
-        if(input$username == "None")  {
+        if(input$username == "None" && input$tag == "None")  {
           ggplot(litter, aes(pickUpDate, frequency(pickUpDate))) +
             geom_bar(fill = "black", stat = "identity") + 
             labs(x = "Day", y = "Amount")
         }
         
-        else{
+        else if( input$username != "None" && input$tag == "None")  {
           pickUpDateUser <- as.Date(litter$TimeStamp[litter$username == input$username])
           ggplot(litter[litter$username == input$username,], aes( x = pickUpDateUser, frequency(pickUpDateUser))) +
+            geom_bar(fill = "black", stat = "identity") + 
+            labs( x = "Day", y = "Amount")
+        }
+        
+        else  {
+          
+          pickUpDateTag <- as.Date(litter$TimeStamp[litter$tags == input$tag])
+          ggplot(litter[litter$tags == input$tag,], aes( x = pickUpDateTag, frequency(pickUpDateTag))) +
             geom_bar(fill = "black", stat = "identity") + 
             labs( x = "Day", y = "Amount")
         }
@@ -172,21 +216,38 @@ server <- function(input, output) {
     # show all of the temperatures for a given room for a given year
     output$hist1 <- renderPlot({
     
-        if( input$username == "None") {
+        if( input$username == "None" && input$tag == "None") {
           #Plot the data for litter picked by each weekday
           ggplot(litter, aes(WeekdayPickup, frequency(WeekdayPickup))) +
             geom_bar(fill = "black", stat = "identity") +
             labs(x = "Weekday", y = "Amount")
         }
       
-        else  {
+        else if( input$username != "None" && input$tag == "None") {
           pickUpDateUser <- as.Date(litter$TimeStamp[litter$username == input$username])
           WeekdayPickupUser <- weekdays(pickUpDateUser)
+          
+          WeekdayPickupUser <- factor(WeekdayPickupUser, levels = 
+                                    c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+          WeekdayPickupUser[order(WeekdayPickupUser)]
           ggplot(litter[litter$username == input$username,], aes(WeekdayPickupUser, frequency(WeekdayPickupUser))) +
             geom_bar(fill = "black", stat = "identity") +
             labs(x = "Weekday", y = "Amount")
           
         }
+        else {
+          
+          pickUpDateTag <- as.Date(litter$TimeStamp[litter$tags == input$tag])
+          WeekdayPickupTag <- weekdays(pickUpDateTag)
+          
+          WeekdayPickupTag <- factor(WeekdayPickupTag, levels = 
+                                        c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+          WeekdayPickupTag[order(WeekdayPickupTag)]
+          ggplot(litter[litter$tags == input$tag,], aes(WeekdayPickupTag, frequency(WeekdayPickupTag))) +
+            geom_bar(fill = "black", stat = "identity") +
+            labs(x = "Weekday", y = "Amount")
+        }
+        
     
     })
   
@@ -194,16 +255,24 @@ server <- function(input, output) {
     # show a line graph of the temperatures at noon for a given room for a given year
     output$hist2 <- renderPlot({
       
-        if( input$username == "None"){
+        if( input$username == "None" && input$tag == "None"){
           #Plot the litter picked up per hour
           ggplot(litter, aes(pickUpTimeHour, frequency(pickUpTimeHour))) +
             geom_bar(fill = "black", stat = "identity") +
             labs( x = "Hour", y = "Amount")
         }
       
-        else  {
+        else if( input$username != "None" && input$tag == "None")  {
+          
           pickUpTimeHourUser <- hour(litter$TimeStamp[litter$username == input$username])
           ggplot(litter[litter$username == input$username,], aes(pickUpTimeHourUser, frequency(pickUpTimeHourUser))) +
+            geom_bar(fill = "black", stat = "identity") +
+            labs( x = "Hour", y = "Amount")
+        }
+        else  {
+          
+          pickUpTimeHourTag <- hour(litter$TimeStamp[litter$tags == input$tag])
+          ggplot(litter[litter$tags == input$tag,], aes(pickUpTimeHourTag, frequency(pickUpTimeHourTag))) +
             geom_bar(fill = "black", stat = "identity") +
             labs( x = "Hour", y = "Amount")
         }
@@ -215,14 +284,14 @@ server <- function(input, output) {
     # show box plot of the temperatures at noon for a given room for a given year
     output$hist3 <- renderPlot({
     
-      if( input$username == "None") {
+      if( input$username == "None" && input$tag == "None") {
         #Plot the Top 10 tags
         ggplot(TagTableTop, aes(TagTable, TTTF)) +
           geom_bar(fill = "black", stat = "identity") +
           labs(x = "Tag", y = "Amount")
       }
       
-      else  {
+      else if( input$username != "None" && input$tag == "None") {
         
         TagTableUser <- unlist(strsplit(litter$tags[litter$username == input$username], split = ","))
         TagTableUser <- unlist(strsplit(TagTableUser, split = " "))
@@ -237,16 +306,168 @@ server <- function(input, output) {
           labs(x = "Tag", y = "Amount")
         
       }
+      
+      else  {
+        
+        TagTableTag <- unlist(strsplit(litter$tags, split = ","))
+        TagTableTag <- unlist(strsplit(TagTableTag, split = " "))
+        TagTableTag <- table(TagTableTag)
+        TagTableTag <- data.frame(TagTableTag)
+        TagTableTag$TagTable <- TagTableTag$TagTableTag
+        TagTableTag$TagTableTag <- NULL
+        TagTableTagTop <- merge(TagTableTag,TagTableTop, by="TagTable")
+        TagTableTagTop <- TagTableTagTop[TagTableTagTop$TagTable == input$tag,]
+        T3F <- TagTableTagTop$Freq.x
+        ggplot(TagTableTagTop, aes(TagTableTagTop$TagTable, T3F)) +
+          geom_bar(fill = "black", stat = "identity") +
+          labs(x = "Tag", y = "Amount")
+      }
     })
     # use DT to help out with the tables - https://datatables.net/reference/option/
-    output$tab1 <- DT::renderDataTable(
+    output$tab0 <- DT::renderDataTable(
       DT::datatable({ 
-        litter
+        CountTop
       }, 
-      options = list(searching = FALSE, pageLength = 5, lengthChange = FALSE, order = list(list(1, 'desc'))
+      options = list(searching = FALSE, pageLength = 10, lengthChange = FALSE, order = list(list(1, 'desc'))
       ), rownames = FALSE 
       )
     )
+    output$tab1 <- DT::renderDataTable(
+      DT::datatable({ 
+        if( input$username == "None" && input$tag == "None") {
+          PickUpDateChart
+        }
+        
+        else if( input$username != "None") {
+          
+          pickUpDateUser <- as.Date(litter$TimeStamp[litter$username == input$username])
+          DaysU <- table(cut(pickUpDateUser, 'day'))
+          PickUpDateChartUser <- data.frame(Date=format(as.Date(names(DaysU)), '%Y-%m-%d'), Frequency = as.vector(DaysU))
+        }
+        
+        else  {
+          
+          pickUpDateTag <- as.Date(litter$TimeStamp[litter$tags == input$tag])
+          DaysT <- table(cut(pickUpDateTag, 'day'))
+          PickUpDateChartTag <- data.frame(Date=format(as.Date(names(DaysT)), '%Y-%m-%d'), Frequency = as.vector(DaysT))
+          
+        }
+      }, 
+      options = list(searching = FALSE, pageLength = 10, lengthChange = FALSE, order = list(list(1, 'desc'))
+      ), rownames = FALSE 
+      )
+    )
+    output$tab2 <- DT::renderDataTable(
+      DT::datatable({ 
+        if( input$username == "None" && input$tag == "None") {
+          WeekdayTablePickup
+        }
+        else if( input$username != "None")  {
+          
+          pickUpDateUser <- as.Date(litter$TimeStamp[litter$username == input$username])
+          WeekdayPickupUser <- weekdays(pickUpDateUser)
+          WeekdayTablePickupUser <- table(WeekdayPickupUser)
+          WeekdayTablePickupUser <- data.frame(WeekdayTablePickupUser)
+        }
+        
+        else  {
+          
+          pickUpDateTag <- as.Date(litter$TimeStamp[litter$tags == input$tag])
+          WeekdayPickupTag <- weekdays(pickUpDateTag)
+          WeekdayTablePickupTag <- table(WeekdayPickupTag)
+          WeekdayTablePickupTag <- data.frame(WeekdayTablePickupTag)
+          
+        }
+      }, 
+      options = list(searching = FALSE, pageLength = 10, lengthChange = FALSE, order = list(list(1, 'desc'))
+      ), rownames = FALSE 
+      )
+    )
+    output$tab3 <- DT::renderDataTable(
+      DT::datatable({ 
+        if( input$username == "None" && input$tag == "None") {
+          pickUpTimeHourTable
+        }
+        else if( input$username != "None") {
+          
+          pickUpTimeHourUser <- hour(litter$TimeStamp[litter$username == input$username])
+          pickUpTimeHourTableUser <- table(pickUpTimeHourUser)
+          pickUpTimeHourTableUser <- data.frame(pickUpTimeHourTableUser)
+        }
+        
+        else  {
+          
+          pickUpTimeHourTag <- hour(litter$TimeStamp[litter$tags == input$tag])
+          pickUpTimeHourTableTag <- table(pickUpTimeHourTag)
+          pickUpTimeHourTableTag <- data.frame(pickUpTimeHourTableTag)
+          
+        }
+      }, 
+      options = list(searching = FALSE, pageLength = 10, lengthChange = FALSE, order = list(list(1, 'desc'))
+      ), rownames = FALSE 
+      )
+    )
+    output$tab4 <- DT::renderDataTable(
+      DT::datatable({ 
+        if( input$username == "None" && input$tag == "None") {
+          TagTableTop
+        }
+        else if( input$username != "None") {
+          
+          TagTableUser <- unlist(strsplit(litter$tags[litter$username == input$username], split = ","))
+          TagTableUser <- unlist(strsplit(TagTableUser, split = " "))
+          TagTableUser <- table(TagTableUser)
+          TagTableUser <- data.frame(TagTableUser)
+          TagTableUser$TagTable <- TagTableUser$TagTableUser
+          TagTableUser$TagTableUser <- NULL
+          TagTableUserTop <- merge(TagTableUser,TagTableTop, by="TagTable")
+          TagTableUserTop$Freq.y <- NULL
+          TagTableUserTop
+        }
+        
+        else  {
+          
+          
+          TagTableTag <- unlist(strsplit(litter$tags, split = ","))
+          TagTableTag <- unlist(strsplit(TagTableTag, split = " "))
+          TagTableTag <- table(TagTableTag)
+          TagTableTag <- data.frame(TagTableTag)
+          TagTableTag$TagTable <- TagTableTag$TagTableTag
+          TagTableTag$TagTableTag <- NULL
+          TagTableTagTop <- merge(TagTableTag,TagTableTop, by="TagTable")
+          TagTableTagTop$Freq.y <- NULL
+          TagTableTagTop <- TagTableTagTop[TagTableTagTop$TagTable == input$tag,]
+        }
+      }, 
+      options = list(searching = FALSE, pageLength = 10, lengthChange = FALSE, order = list(list(1, 'desc'))
+      ), rownames = FALSE 
+      )
+    )
+    output$leaf <- renderLeaflet({
+      if( input$username == "None" && input$tag == "None")  {
+        TagName <- litter$tags
+        map <- leaflet( data = litter)
+      }
+      
+      else if ( input$username != "None") {
+        
+        dataUser <- litter[litter$username == input$username,]
+        TagName <- dataUser$tags
+        map <- leaflet( data = DataUser)
+      }
+      
+      else  {
+        
+        dataTags <- litter[litter$tags == input$tag,]
+        TagName <- dataTags$tags
+        map <- leaflet( data = dataTags)
+      }
+      map <- addTiles(map)
+      map <- setView(map, lng = -87.647998, lat = 41.870, zoom = 12)
+      map <- addMarkers(map, lng = ~lon, lat = ~lat, popup = TagName,
+                        clusterOptions = markerClusterOptions())
+      map
+    })
   }
 
     
