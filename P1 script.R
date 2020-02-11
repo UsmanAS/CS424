@@ -1,7 +1,7 @@
 #Usman Siddiqui CS 424 Project 1
 
 #Libraries to use
-
+#Install all these packages
 library(lubridate)
 library(leaflet)
 library(stringr)
@@ -177,7 +177,7 @@ ui <- dashboardPage(
       )
       ),
       tabItem(tabName = "About",
-            h2("About???")
+            h2("This Project was created by Usman Siddiqui and the data is from littereli.")
       )
     )
   )
