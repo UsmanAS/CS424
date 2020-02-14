@@ -35,6 +35,13 @@ countUsers <- plyr::count(litter, vars = "username")
 CountTop <- arrange(countUsers,desc(countUsers$freq))
 CountTop <- top_n(CountTop, 10)
 
+
+#Test
+litter <- subset(litter, lat < 41.88667)
+litter <- subset(litter, lon > -87.833822)
+
+litter <- subset(litter, lat > 41.850114)
+litter <- subset(litter, lon < -87.804349)
 #Fix the tags making the blank tags as untagged
 fixedTags <- litter$tags
 fixedTags <- as.character(fixedTags)
