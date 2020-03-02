@@ -86,6 +86,7 @@ TagTableTop <- top_n(TagTableTop, 10)
 #Frequency of each tag for the Top 10
 TTTF <- TagTableTop$Freq
 
+#Menu Items users and topTags
 users <- CountTop$username
 users <- append(users, "None")
 topTags <- as.character(TagTableTop$TagTable)
@@ -108,9 +109,10 @@ ui <- dashboardPage(
       menuItem("", tabName = "cheapBlankSpace", icon = NULL),
       menuItem("", tabName = "cheapBlankSpace", icon = NULL),
       menuItem("", tabName = "cheapBlankSpace", icon = NULL)),
-    
+    #Makes the drop down menu
     selectInput("tag", "Select the tag to visualize", topTags, selected = "None"),
     selectInput("username", "Select the Data to visualize", users, selected = "None"),
+    #Adds the menu items
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("About", tabName = "About")
     
@@ -129,7 +131,7 @@ ui <- dashboardPage(
                  
                fluidRow(
                  
-                 box(title = "Top 10 pickers", solidHeader = TRUE, status = "primary", width = 12,
+                 box(title = "Top 10 pickers", solidHeader = TRUE, status = "primary", width = 3,
                      dataTableOutput("tab0", height = 400)
                  )
                ),
@@ -154,19 +156,19 @@ ui <- dashboardPage(
         ),
       fluidRow(
         
-        box(title = "Litter picked up each Day", solidHeader = TRUE, status = "primary", width = 12,
+        box(title = "Litter picked up each Day", solidHeader = TRUE, status = "primary", width = 3,
             dataTableOutput("tab1", height = 400)
         ),
         
-        box(title = "Litter picked up each Weekday", solidHeader = TRUE, status = "primary", width = 12,
+        box(title = "Litter picked up each Weekday", solidHeader = TRUE, status = "primary", width = 3,
             dataTableOutput("tab2", height = 400)
         ),
         
-        box(title = "Litter picked up each Hour", solidHeader = TRUE, status = "primary", width = 12,
+        box(title = "Litter picked up each Hour", solidHeader = TRUE, status = "primary", width = 3,
             dataTableOutput("tab3", height = 400)
         ),
         
-        box(title = "Top 10 Tags", solidHeader = TRUE, status = "primary", width = 12,
+        box(title = "Top 10 Tags", solidHeader = TRUE, status = "primary", width = 3,
             dataTableOutput("tab4", height = 400)
         )
         
